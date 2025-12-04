@@ -131,152 +131,17 @@
         <div class="stat-box">
           <span class="label">남은 지뢰</span>
           <span id="mine-count" class="value">0</span>
-          <!DOCTYPE html>
-          <html lang="ko">
+        </div>
+        <div class="stat-box">
+          <span class="label">이동 횟수</span>
+          <span id="move-count" class="value">0</span>
+        </div>
+      </div>
+      <div id="message-area" class="message-area"></div>
+      <div id="game-board" class="board"></div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
 
-          <head>
-            <meta charset="UTF-8" />
-            <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <title>움직이는 지뢰찾기</title>
-            <link rel="preconnect" href="https://fonts.googleapis.com">
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-            <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap"
-              rel="stylesheet">
-          </head>
-
-          <body>
-            <div id="app">
-              <div id="intro-screen" class="screen active">
-                <div class="intro-logo">
-                  <svg viewBox="0 0 100 100" width="80" height="80" class="bomb-logo">
-                    <style>
-                      .bomb-body {
-                        fill: #1e293b;
-                      }
-
-                      .bomb-fuse {
-                        fill: none;
-                        stroke: #475569;
-                        stroke-width: 3;
-                      }
-
-                      .bomb-spark {
-                        fill: #ef4444;
-                        animation: spark 0.5s infinite alternate;
-                      }
-
-                      @keyframes spark {
-                        from {
-                          opacity: 0.5;
-                          transform: scale(0.8);
-                        }
-
-                        to {
-                          opacity: 1;
-                          transform: scale(1.2);
-                        }
-                      }
-
-                      .bomb-pulse {
-                        animation: pulse-bomb 2s infinite;
-                        transform-origin: center;
-                      }
-
-                      @keyframes pulse-bomb {
-                        0% {
-                          transform: scale(1);
-                        }
-
-                        50% {
-                          transform: scale(1.05);
-                        }
-
-                        100% {
-                          transform: scale(1);
-                        }
-                      }
-                    </style>
-                    <g class="bomb-pulse">
-                      <circle cx="50" cy="55" r="35" class="bomb-body" />
-                      <path d="M50 20 Q 60 10 75 15" class="bomb-fuse" />
-                      <circle cx="75" cy="15" r="5" class="bomb-spark" />
-                      <rect x="42" y="15" width="16" height="10" rx="2" class="bomb-body" />
-                    </g>
-                  </svg>
-                  <h1 class="title">움직이는<br>지뢰찾기</h1>
-                </div>
-
-                <div class="intro-content-wrapper">
-                  <div class="menu-container">
-                    <div class="option-group">
-                      <label>난이도</label>
-                      <div class="btn-group" id="difficulty-select">
-                        <button class="btn active" data-value="easy">초급 (90초)</button>
-                        <button class="btn" data-value="medium">중급 (150초)</button>
-                        <button class="btn" data-value="hard">고급 (270초)</button>
-                      </div>
-                    </div>
-                    <div class="option-group">
-                      <label>모양</label>
-                      <div class="btn-group" id="shape-select">
-                        <button class="btn active" data-value="square">사각형</button>
-                        <button class="btn" data-value="snake">뱀 (ㄹ자)</button>
-                        <button class="btn" data-value="block">블록 (ㅂ자)</button>
-                      </div>
-                    </div>
-                    <button id="start-btn" class="btn primary">게임 시작</button>
-
-                    <div class="intro-ranking">
-                      <h3>🏆 명예의 전당 🏆</h3>
-                      <div class="ranking-tabs">
-                        <button class="tab-btn active" data-rank-tab="easy">초급</button>
-                        <button class="tab-btn" data-rank-tab="medium">중급</button>
-                        <button class="tab-btn" data-rank-tab="hard">고급</button>
-                      </div>
-                      <ul id="intro-rank-list"></ul>
-                    </div>
-                  </div>
-
-                  <div class="rules-container">
-                    <h3>📜 게임 방법</h3>
-                    <ul>
-                      <li><strong>이동하는 지뢰:</strong> 지뢰가 주기적으로 이동합니다!</li>
-                      <li><strong>지진 경보:</strong> "지진 활동 감지" 경고가 뜨면 지뢰가 곧 움직입니다.</li>
-                      <li><strong>지뢰 고정:</strong> 깃발(🚩)을 꽂은 지뢰는 움직이지 못합니다. 깃발로 지뢰를 묶어두세요!</li>
-                      <li><strong>힌트:</strong>
-                        <div class="hint-legend">
-                          <span class="legend-item"><span class="dot red"></span> 가까움 (2칸)</span>
-                          <span class="legend-item"><span class="dot blue"></span> 멂 (3칸)</span>
-                        </div>
-                      </li>
-                      <li><strong>목표:</strong> 시간 내에 모든 안전한 땅을 찾으세요!</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              <div id="game-screen" class="screen">
-                <div class="hud">
-                  <div class="stat-box">
-                    <span class="label">남은 시간</span>
-                    <span id="timer" class="value">60</span>
-                  </div>
-                  <div class="stat-box">
-                    <span class="label">남은 지뢰</span>
-                    <span id="mine-count" class="value">0</span>
-                  </div>
-                  <div class="stat-box">
-                    <span class="label">이동 횟수</span>
-                    <span id="move-count" class="value">0</span>
-                  </div>
-                </div>
-                <div id="message-area" class="message-area"></div>
-                <div id="game-board" class="board"></div>
-                <button id="mobile-mode-toggle" class="btn mobile-toggle hidden">⛏️ 채굴 모드</button>
-              </div>
-            </div>
-            <script type="module" src="/src/main.js"></script>
-          </body>
-
-          </html>
+</html>
