@@ -22,7 +22,9 @@ const state = {
   movesLeft: 0,
   movesSinceLastClick: 0,
   totalMoveBudget: 0,
-  moveInterval: 0
+  moveInterval: 0,
+  firstClick: true,
+  inputMode: 'mine' // 'mine' or 'flag'
 };
 
 const CONFIG = {
@@ -54,12 +56,33 @@ const startBtn = document.getElementById('start-btn');
 const difficultyBtns = document.querySelectorAll('#difficulty-select .btn');
 const shapeBtns = document.querySelectorAll('#shape-select .btn');
 const rankTabs = document.querySelectorAll('.tab-btn');
+const mobileToggleBtn = document.getElementById('mobile-mode-toggle');
 
 // Init
 initBackground();
 renderIntroRankings('easy');
+detectMobile();
+
+function detectMobile() {
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 800;
+  if (isMobile) {
+    mobileToggleBtn.classList.remove('hidden');
+  }
+}
 
 // Event Listeners
+mobileToggleBtn.addEventListener('click', () => {
+  if (state.inputMode === 'mine') {
+    state.inputMode = 'flag';
+    mobileToggleBtn.textContent = '🚩 깃발 모드';
+    mobileToggleBtn.classList.add('flag-mode');
+  } else {
+    state.inputMode = 'mine';
+    mobileToggleBtn.textContent = '⛏️ 채굴 모드';
+    mobileToggleBtn.classList.remove('flag-mode');
+  }
+});
+
 difficultyBtns.forEach(btn => {
   btn.addEventListener('click', () => {
     difficultyBtns.forEach(b => b.classList.remove('active'));
@@ -114,6 +137,11 @@ function startGame() {
   state.movesLeft = state.totalMoveBudget;
   state.moveInterval = config.moveInterval;
   state.firstClick = true; // Flag for first click
+
+  // Reset Input Mode
+  state.inputMode = 'mine';
+  mobileToggleBtn.textContent = '⛏️ 채굴 모드';
+  mobileToggleBtn.classList.remove('flag-mode');
 
   state.grid = createBoard(state.rows, state.cols, state.shape, state.difficulty);
   // Mines are now placed on first click
@@ -177,6 +205,12 @@ function triggerMineMovement() {
 function handleCellClick(row, col) {
   if (state.isGameOver) return;
 
+  // Mobile Flag Mode Check
+  if (state.inputMode === 'flag') {
+    handleCellRightClick(row, col);
+    return;
+  }
+
   const cell = state.grid[row][col];
   if (cell.flagState === 1 || cell.isRevealed) return;
 
@@ -205,7 +239,7 @@ function handleCellClick(row, col) {
 }
 
 function handleCellRightClick(row, col, e) {
-  e.preventDefault();
+  if (e) e.preventDefault(); // e is optional now
   if (state.isGameOver) return;
 
   const cell = state.grid[row][col];
