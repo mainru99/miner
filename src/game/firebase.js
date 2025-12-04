@@ -4,12 +4,12 @@ import { getFirestore } from "firebase/firestore";
 // TODO: Replace with your Firebase project configuration
 // Firebase Console -> Project Settings -> General -> Your apps -> SDK setup and configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyCgMs04YcNpLATUWQr3LvnPJSocFcRexxs",
-    authDomain: "minerrankdb.firebaseapp.com",
-    projectId: "minerrankdb",
-    storageBucket: "minerrankdb.firebasestorage.app",
-    messagingSenderId: "282477991184",
-    appId: "1:282477991184:web:fbf004e1c3b6cfb5230195"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 // Initialize Firebase
