@@ -113,10 +113,10 @@ function startGame() {
   state.totalMoveBudget = config.maxMoves;
   state.movesLeft = state.totalMoveBudget;
   state.moveInterval = config.moveInterval;
+  state.firstClick = true; // Flag for first click
 
   state.grid = createBoard(state.rows, state.cols, state.shape, state.difficulty);
-  state.mines = placeMines(state.grid, state.mineCount);
-  calculateCellValues(state.grid);
+  // Mines are now placed on first click
 
   switchScreen('game-screen');
   renderBoard(state.grid, handleCellClick, handleCellRightClick);
@@ -125,8 +125,10 @@ function startGame() {
   updateMoveCount(state.movesLeft);
 
   startTimer();
-  // Mine movement is now checked inside the timer loop to match React logic
 }
+
+// Expose restart for renderer
+window.restartGame = startGame;
 
 function startTimer() {
   if (state.timerId) clearInterval(state.timerId);
@@ -145,8 +147,8 @@ function startTimer() {
       const timeElapsed = initialTime - state.timeLeft;
       const shouldMove = timeElapsed > 0 && (timeElapsed % state.moveInterval === 0);
 
-      if (shouldMove && state.movesLeft > 0) {
-        if (state.movesSinceLastClick < 2) { // MAX_IDLE_MOVES = 2
+      if (shouldMove && state.movesLeft > 0 && !state.firstClick) { // Don't move if game hasn't really started (mines not placed)
+        if (state.movesSinceLastClick < 2) {
           triggerMineMovement();
         }
       }
@@ -178,6 +180,13 @@ function handleCellClick(row, col) {
   const cell = state.grid[row][col];
   if (cell.flagState === 1 || cell.isRevealed) return;
 
+  // Safe First Click Logic
+  if (state.firstClick) {
+    state.mines = placeMines(state.grid, state.mineCount, row, col);
+    calculateCellValues(state.grid);
+    state.firstClick = false;
+  }
+
   state.movesSinceLastClick = 0;
   sounds.click();
 
@@ -186,7 +195,7 @@ function handleCellClick(row, col) {
   } else {
     const points = revealCell(state.grid, row, col);
     state.score += points;
-    calculateCellValues(state.grid);
+    calculateCellValues(state.grid); // Recalculate mainly for neighbor counts if needed, though static unless mines moved.
     renderBoard(state.grid, handleCellClick, handleCellRightClick);
 
     if (checkWinCondition(state.grid, state.mineCount)) {
@@ -202,7 +211,7 @@ function handleCellRightClick(row, col, e) {
   const cell = state.grid[row][col];
   if (cell.isRevealed) return;
 
-  state.movesSinceLastClick = 0; // Reset idle count on flag too? React code says "resetIdleCount" on context menu too.
+  state.movesSinceLastClick = 0;
   toggleFlag(cell);
   renderBoard(state.grid, handleCellClick, handleCellRightClick);
 }
@@ -213,15 +222,18 @@ function gameOver(hitMine, timeOut) {
 
   if (hitMine) sounds.boom();
 
-  state.mines.forEach(pos => {
-    state.grid[pos.r][pos.c].isRevealed = true;
-  });
+  // If mines exist (game started), reveal them
+  if (state.mines) {
+    state.mines.forEach(pos => {
+      state.grid[pos.r][pos.c].isRevealed = true;
+    });
+  }
   renderBoard(state.grid, handleCellClick, handleCellRightClick);
 
   const msg = hitMine ? "💥 쾅! 게임 오버 💥" : "⏰ 시간 초과! ⏰";
   showMessage(msg);
 
-  saveScore(state.difficulty, "플레이어", state.score);
+  // saveScore removed to prevent duplicate entry (waiting for user input)
 
   let countdown = 5;
   const countdownMsg = document.createElement('div');
@@ -244,10 +256,11 @@ function gameWin() {
   state.isGameOver = true;
   sounds.win();
 
-  const finalScore = state.score * state.timeLeft + 100;
+  // New Score Logic: Score + 10 + TimeLeft
+  const finalScore = state.score + 10 + state.timeLeft;
   showMessage("🏆 임무 완수! 🏆");
 
-  saveScore(state.difficulty, "플레이어", finalScore);
+  // saveScore removed to prevent duplicate entry
 
   let countdown = 5;
   state.countdownId = setInterval(() => {

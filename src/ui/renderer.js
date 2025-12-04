@@ -223,7 +223,7 @@ export function renderBoard(grid, onClick, onRightClick) {
     }
 }
 
-export function renderIntroRankings(difficulty) {
+export async function renderIntroRankings(difficulty) {
     const listEl = document.getElementById('intro-rank-list');
     if (!listEl) return;
 
@@ -232,15 +232,22 @@ export function renderIntroRankings(difficulty) {
         titleEl.setAttribute('data-init', 'true');
         titleEl.style.cursor = 'pointer';
         titleEl.title = '클릭하여 랭킹 초기화';
-        titleEl.addEventListener('click', () => {
-            if (confirm('모든 랭킹을 초기화하시겠습니까?')) {
-                resetRankings();
-                renderIntroRankings(difficulty);
+        titleEl.addEventListener('click', async () => {
+            const password = prompt('랭킹 초기화를 위해 관리자 비밀번호를 입력하세요:');
+            if (password === 'gorkdrh') {
+                if (confirm('정말로 모든 랭킹(DB 포함)을 초기화하시겠습니까?')) {
+                    await resetRankings();
+                    renderIntroRankings(difficulty);
+                    alert('랭킹이 초기화되었습니다.');
+                }
+            } else if (password !== null) {
+                alert('비밀번호가 틀렸습니다.');
             }
         });
     }
 
-    const rankings = getRankings()[difficulty] || [];
+    const allRankings = await getRankings();
+    const rankings = allRankings[difficulty] || [];
 
     if (rankings.length === 0) {
         listEl.innerHTML = '<li style="text-align:center; color:var(--text-muted)">기록 없음</li>';
@@ -256,11 +263,12 @@ export function renderIntroRankings(difficulty) {
   `).join('');
 }
 
-export function showGameOverPopup(isWin, score, msg, difficulty) {
+export async function showGameOverPopup(isWin, score, msg, difficulty) {
     const popup = document.createElement('div');
     popup.className = 'popup-overlay';
 
-    const rankings = getRankings()[difficulty];
+    const allRankings = await getRankings();
+    const rankings = allRankings[difficulty] || [];
     const rankList = rankings.map((r, i) => `<li>${i + 1}. ${r.name} - ${r.score}</li>`).join('');
 
     popup.innerHTML = `
@@ -288,17 +296,24 @@ export function showGameOverPopup(isWin, score, msg, difficulty) {
     document.body.appendChild(popup);
     document.getElementById('app').classList.add('blurred');
 
-    popup.querySelector('#save-score-btn').addEventListener('click', () => {
+    popup.querySelector('#save-score-btn').addEventListener('click', async () => {
         const name = popup.querySelector('#player-name').value || "익명";
-        saveScore(difficulty, name, score);
-        const newRankings = getRankings()[difficulty];
+        await saveScore(difficulty, name, score);
+        const newAllRankings = await getRankings();
+        const newRankings = newAllRankings[difficulty] || [];
         popup.querySelector('ul').innerHTML = newRankings.map((r, i) => `<li>${i + 1}. ${r.name} - ${r.score}</li>`).join('');
         popup.querySelector('#save-score-btn').disabled = true;
         popup.querySelector('#save-score-btn').textContent = "저장됨";
     });
 
     popup.querySelector('#restart-game-btn').addEventListener('click', () => {
-        window.location.reload();
+        document.body.removeChild(popup);
+        document.getElementById('app').classList.remove('blurred');
+        if (window.restartGame) {
+            window.restartGame();
+        } else {
+            window.location.reload();
+        }
     });
 
     popup.querySelector('#menu-btn').addEventListener('click', () => {

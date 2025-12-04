@@ -11,7 +11,7 @@ export function getMineCount(difficulty) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-export function placeMines(grid, count) {
+export function placeMines(grid, count, excludeRow, excludeCol) {
     const rows = grid.length;
     const cols = grid[0].length;
     const mines = [];
@@ -19,6 +19,9 @@ export function placeMines(grid, count) {
     const activeCells = [];
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
+            // Exclude the first clicked cell
+            if (r === excludeRow && c === excludeCol) continue;
+
             if (grid[r][c].isActive) {
                 activeCells.push(grid[r][c]);
             }
